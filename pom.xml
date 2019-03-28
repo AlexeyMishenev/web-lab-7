@@ -19,6 +19,7 @@
   <modules>
     <module>database</module>
     <module>antibiotic-service</module>
+    <module>deployment</module>
   </modules>
 
   <dependencyManagement>
