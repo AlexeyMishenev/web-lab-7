@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>web-lab-1</artifactId>
+    <groupId>ru.ifmo.wst</groupId>
+    <version>1.0</version>
+  </parent>
+
+  <artifactId>antibiotic-service</artifactId>
+
+  <properties>
+    <client.artifactName>${project.artifactId}-${project.version}-client</client.artifactName>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>jaxws-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <configuration>
+              <genWsdl>true</genWsdl>
+            </configuration>
+            <goals>
+              <goal>wsgen</goal>
+            </goals>
+            <id>gen-wdsl</id>
+            <phase>prepare-package</phase>
+          </execution>
+          <execution>
+            <configuration>
+              <args>
+                <arg>-clientjar</arg>
+                <arg>${project.build.directory}/${client.artifactName}.jar</arg>
+              </args>
+              <destDir>${project.build.directory}/jaxws-client-classes</destDir>
+              <packageName>ru.ifmo.wst.client</packageName>
+              <wsdlFiles>
+                <wsdlFile>
+                  ${project.build.directory}/generated-sources/wsdl/AntibioticServiceService.wsdl
+                </wsdlFile>
+              </wsdlFiles>
+              <xnocompile>false</xnocompile>
+            </configuration>
+            <goals>
+              <goal>wsimport</goal>
+            </goals>
+            <id>build-client-jar</id>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <groupId>org.codehaus.mojo</groupId>
+      </plugin>
+      <plugin>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <classifier>client</classifier>
+                  <file>${project.build.directory}/${client.artifactName}.jar</file>
+                  <type>jar</type>
+                </artifact>
+              </artifacts>
+            </configuration>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <id>attach-client-jar</id>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <groupId>org.codehaus.mojo</groupId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>ru.ifmo.wst</groupId>
+      <artifactId>database</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax</groupId>
+      <artifactId>javaee-api</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>

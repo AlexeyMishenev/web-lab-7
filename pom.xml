@@ -18,6 +18,7 @@
 
   <modules>
     <module>database</module>
+    <module>antibiotic-service</module>
   </modules>
 
   <dependencyManagement>
@@ -34,6 +35,14 @@
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
         <version>1.18.6</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/javax/javaee-api -->
+      <dependency>
+        <groupId>javax</groupId>
+        <artifactId>javaee-api</artifactId>
+        <version>7.0</version>
         <scope>provided</scope>
       </dependency>
     </dependencies>
