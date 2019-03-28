@@ -20,6 +20,7 @@
     <module>database</module>
     <module>antibiotic-service</module>
     <module>deployment</module>
+    <module>standalone</module>
   </modules>
 
   <dependencyManagement>
@@ -46,6 +47,28 @@
         <version>7.0</version>
         <scope>provided</scope>
       </dependency>
+
+      <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+      <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+        <version>3.3.1</version>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.2.5</version>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-server -->
+      <dependency>
+        <groupId>com.sun.jersey</groupId>
+        <artifactId>jersey-server</artifactId>
+        <version>1.19.4</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
