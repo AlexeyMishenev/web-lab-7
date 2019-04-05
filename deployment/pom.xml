@@ -6,8 +6,8 @@
 
   <parent>
     <groupId>ru.ifmo.wst</groupId>
-    <artifactId>web-lab-1</artifactId>
-    <version>1.0</version>
+    <artifactId>web-lab-2</artifactId>
+    <version>2.0</version>
   </parent>
 
   <artifactId>deployment</artifactId>
@@ -18,7 +18,7 @@
     <dependency>
       <groupId>ru.ifmo.wst</groupId>
       <artifactId>antibiotic-service</artifactId>
-      <version>1.0</version>
+      <version>2.0</version>
     </dependency>
 
     <dependency>
