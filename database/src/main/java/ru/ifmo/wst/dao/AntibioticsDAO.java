@@ -128,6 +128,76 @@ public class AntibioticsDAO {
     }
   }
 
+  public long create(String name, String method, int from, int to, String dosage, String additional)
+      throws SQLException {
+    log.debug("Create with args {} {} {} {} {} {}", name, method, from, to, dosage, additional);
+    try (Connection connection = dataSource.getConnection()) {
+      connection.setAutoCommit(false);
+      long newId;
+      try (Statement idStatement = connection.createStatement()) {
+        idStatement.execute("SELECT nextval('antibiotics_id_seq') nextval");
+        try (ResultSet rs = idStatement.getResultSet()) {
+          rs.next();
+          newId = rs.getLong("nextval");
+        }
+
+      }
+      try (PreparedStatement stmnt = connection.prepareStatement(
+          "INSERT INTO " + TABLE_NAME + "(" + String.join(", ", columnNames) + ") " +
+              "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+        stmnt.setLong(1, newId);
+        stmnt.setString(2, name);
+        stmnt.setString(3, method);
+        stmnt.setInt(4, from);
+        stmnt.setInt(5, to);
+        stmnt.setString(6, dosage);
+        stmnt.setString(7, additional);
+        int count = stmnt.executeUpdate();
+        if (count == 0) {
+          throw new RuntimeException("Could not execute query");
+        }
+        connection.commit();
+        connection.setAutoCommit(true);
+        return newId;
+      }
+    }
+  }
+
+  public int delete(long id) throws SQLException {
+    log.debug("Delete entity with id {}", id);
+    try (Connection connection = dataSource.getConnection()) {
+      connection.setAutoCommit(true);
+      try (PreparedStatement ps = connection.prepareStatement(
+          "DELETE FROM " + TABLE_NAME + " WHERE " + ID + " = ?")) {
+        ps.setLong(1, id);
+        return ps.executeUpdate();
+      }
+    }
+  }
+
+  public long update(long id, String name, String method, int from, int to,
+      String dosage, String additional) throws SQLException {
+    log.debug("Update with args {} {} {} {} {} {}", name, method, from, to, dosage, additional);
+    try (Connection connection = dataSource.getConnection()) {
+      connection.setAutoCommit(true);
+      try (PreparedStatement statement = connection.prepareStatement(
+          String.format("UPDATE %s SET %s = ?, %s = ?, %s = ?, %s = ?, %s = ?, %s = ? WHERE %s = ?",
+              TABLE_NAME, NAME, METHOD, FROM, TO, DOSAGE, ADDITIONAL, ID)
+      )) {
+        statement.setString(1, name);
+        statement.setString(2, method);
+        statement.setInt(3, from);
+        statement.setInt(4, to);
+        statement.setString(5, dosage);
+        statement.setString(6, additional);
+        statement.setLong(7, id);
+        int updated = statement.executeUpdate();
+        log.debug("{} rows updated", updated);
+        return updated;
+      }
+    }
+  }
+
   private List<String> resultSetToStringList(ResultSet rs) throws SQLException {
     List<String> result = new ArrayList<>();
     while (rs.next()) {
