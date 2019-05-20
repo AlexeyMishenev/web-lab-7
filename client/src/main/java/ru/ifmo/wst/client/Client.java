@@ -36,13 +36,23 @@ public class Client {
           break;
         case 1:
           System.out.println("Найдено:");
-          antibioticPort.findAllAntibiotics().forEach(System.out::println);
-          curState = 0;
+          try {
+            antibioticPort.findAllAntibiotics().forEach(System.out::println);
+          } catch (AntibioticServiceException e) {
+            System.err.println(e.getFaultInfo().getMessage());
+          } finally {
+            curState = 0;
+          }
           break;
         case 2:
           System.out.println("Найдено:");
-          antibioticPort.findAll().stream().map(Object::toString).forEach(System.out::println);
-          curState = 0;
+          try {
+            antibioticPort.findAll().stream().map(Object::toString).forEach(System.out::println);
+          } catch (AntibioticServiceException e) {
+            System.err.println(e.getFaultInfo().getMessage());
+          } finally {
+            curState = 0;
+          }
           break;
         case 3:
           System.out.println("\nЗаполните все поля");
@@ -59,8 +69,13 @@ public class Client {
           Integer skf = readInt(reader);
 
           System.out.println("Найдено:");
-          System.out.println(antibioticPort.findDosage(findName, findMethod, skf));
-          curState = 0;
+          try {
+            System.out.println(antibioticPort.findDosage(findName, findMethod, skf));
+          } catch (AntibioticServiceException e) {
+            System.err.println(e.getFaultInfo().getMessage());
+          } finally {
+            curState = 0;
+          }
           break;
         case 4:
           System.out.println("\nЧтобы не применять фильтр, оставьте значение пустым");
@@ -75,9 +90,14 @@ public class Client {
           System.out.println("СКФ до:");
           Integer to = readInt(reader);
           System.out.println("Найдено:");
-          antibioticPort.filter(id, name, method, from, to, null, null).stream()
-              .map(Objects::toString).forEach(System.out::println);
-          curState = 0;
+          try {
+            antibioticPort.filter(id, name, method, from, to, null, null).stream()
+                .map(Objects::toString).forEach(System.out::println);
+          } catch (AntibioticServiceException e) {
+            System.err.println(e.getFaultInfo().getMessage());
+          } finally {
+            curState = 0;
+          }
           break;
         case 5:
           System.out.println("\nЗаполните поля (* - обязательные)");
@@ -108,10 +128,15 @@ public class Client {
             createDosage += "*";
           }
 
-          long createdId = antibioticPort.create(createName, createMethod,
-              createFrom, createTo, createDosage, createAdditional);
-          System.out.println("ID новой записи: " + createdId);
-          curState = 0;
+          try {
+            long createdId = antibioticPort.create(createName, createMethod,
+                createFrom, createTo, createDosage, createAdditional);
+            System.out.println("ID новой записи: " + createdId);
+          } catch (AntibioticServiceException e) {
+            System.err.println(e.getFaultInfo().getMessage());
+          } finally {
+            curState = 0;
+          }
           break;
         case 6:
           Long updateId;
@@ -137,11 +162,15 @@ public class Client {
           String updateDosage = readString(reader);
           System.out.println("Дополнительно:");
           String updateAdditional = readString(reader);
-
-          long updateRes = antibioticPort.update(updateId,
-              updateName, updateMethod, updateFrom, updateTo, updateDosage, updateAdditional);
-          System.out.println("Изменено " + updateRes + " строк");
-          curState = 0;
+          try {
+            long updateRes = antibioticPort.update(updateId,
+                updateName, updateMethod, updateFrom, updateTo, updateDosage, updateAdditional);
+            System.out.println("Изменено " + updateRes + " строк");
+          } catch (AntibioticServiceException e) {
+            System.err.println(e.getFaultInfo().getMessage());
+          } finally {
+            curState = 0;
+          }
           break;
         case 7:
           Long deleteId;
@@ -153,9 +182,14 @@ public class Client {
             curState = 0;
             break;
           }
-          int deleteRes = antibioticPort.delete(deleteId);
-          System.out.println("Удалено " + deleteRes + " строк(а)");
-          curState = 0;
+          try {
+            int deleteRes = antibioticPort.delete(deleteId);
+            System.out.println("Удалено " + deleteRes + " строк(а)");
+          } catch (AntibioticServiceException e) {
+            System.err.println(e.getFaultInfo().getMessage());
+          } finally {
+            curState = 0;
+          }
           break;
         case 8:
           return;

@@ -1,5 +1,6 @@
 package ru.ifmo.wst.ws;
 
+import java.sql.SQLException;
 import java.util.List;
 import javax.inject.Inject;
 import javax.jws.WebMethod;
@@ -8,7 +9,6 @@ import javax.jws.WebResult;
 import javax.jws.WebService;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
 import ru.ifmo.wst.dao.AntibioticsDAO;
 import ru.ifmo.wst.entity.Antibiotics;
 
@@ -21,59 +21,62 @@ public class AntibioticService {
   private AntibioticsDAO antibioticsDAO;
 
   @WebMethod
-  @SneakyThrows
-  public List<Antibiotics> findAll() {
-    return antibioticsDAO.findAll();
+  public List<Antibiotics> findAll() throws AntibioticServiceException {
+    return wrapException(() -> antibioticsDAO.findAll());
   }
 
   @WebMethod
-  @SneakyThrows
-  public List<String> findAllAntibiotics() {
-    return antibioticsDAO.findAllAntibiotics();
+  public List<String> findAllAntibiotics() throws AntibioticServiceException {
+    return wrapException(() -> antibioticsDAO.findAllAntibiotics());
   }
 
   @WebMethod
-  @SneakyThrows
   public String findDosage(
       @WebParam(name = "name") String name,
       @WebParam(name = "method") String method,
-      @WebParam(name = "skf") Integer skf) {
-    return antibioticsDAO.findDosage(name, method, skf);
+      @WebParam(name = "skf") Integer skf) throws AntibioticServiceException {
+    return wrapException(() -> antibioticsDAO.findDosage(name, method, skf));
   }
 
   @WebMethod
-  @SneakyThrows
   public List<Antibiotics> filter(
       @WebParam(name = "id") Long id,
       @WebParam(name = "name") String name,
       @WebParam(name = "method") String method,
       @WebParam(name = "from") Integer from,
       @WebParam(name = "to") Integer to,
-      @WebParam(name = "dosage") String dosage,
-      @WebParam(name = "additional") String additional) {
-    return antibioticsDAO.filter(id, name, method, to, from, dosage, additional);
+      @WebParam(name = "dosage") String dose,
+      @WebParam(name = "additional") String additional) throws AntibioticServiceException {
+    return wrapException(() -> antibioticsDAO.filter(id, name, method, to, from, dose, additional));
   }
 
   @WebMethod
-  @SneakyThrows
   public long create(
       @WebParam(name = "name") String name,
       @WebParam(name = "method") String method,
       @WebParam(name = "from") Integer from,
       @WebParam(name = "to") Integer to,
       @WebParam(name = "dosage") String dosage,
-      @WebParam(name = "additional") String additional) {
-    return antibioticsDAO.create(name, method, to, from, dosage, additional);
+      @WebParam(name = "additional") String additional) throws AntibioticServiceException {
+    notNullArg("name", name);
+    notNullArg("from", from);
+    notNullArg("to", to);
+    notNullArg("dosage", dosage);
+    return wrapException(() -> antibioticsDAO.create(name, method, to, from, dosage, additional));
   }
 
   @WebMethod
-  @SneakyThrows
-  public int delete(@WebParam(name = "id") long id) {
-    return antibioticsDAO.delete(id);
+  public int delete(@WebParam(name = "id") long id) throws AntibioticServiceException {
+    return wrapException(() -> {
+      int deletedCount = antibioticsDAO.delete(id);
+      if (deletedCount <= 0) {
+        throw new AntibioticServiceException("No records with id " + id + " found to delete");
+      }
+      return deletedCount;
+    });
   }
 
   @WebMethod
-  @SneakyThrows
   @WebResult(name = "updatedCount")
   public long update(
       @WebParam(name = "id") Long id,
@@ -82,7 +85,44 @@ public class AntibioticService {
       @WebParam(name = "from") Integer from,
       @WebParam(name = "to") Integer to,
       @WebParam(name = "dosage") String dosage,
-      @WebParam(name = "additional") String additional) {
-    return antibioticsDAO.update(id, name, method, from, to, dosage, additional);
+      @WebParam(name = "additional") String additional) throws AntibioticServiceException {
+    notNullArg("name", name);
+    notNullArg("from", from);
+    notNullArg("to", to);
+    notNullArg("dosage", dosage);
+    return wrapException(() -> {
+      long updatedCount = antibioticsDAO.update(id, name, method, from, to, dosage, additional);
+      if (updatedCount <= 0) {
+        throw new AntibioticServiceException("No records with id " + id + " found to update");
+      }
+      return updatedCount;
+    });
+  }
+
+  private void notNullArg(String argName, Object argValue) throws AntibioticServiceException {
+    if (argValue == null) {
+      String message = argName + " must be not null";
+      throw new AntibioticServiceException(message);
+    }
+  }
+
+  private <T> T wrapException(Supplier<T> supplier) throws AntibioticServiceException {
+    try {
+      return supplier.produce();
+    } catch (AntibioticServiceException exc) {
+      throw exc;
+    } catch (SQLException exc) {
+      String message = "Unexpected SQL exception with message " + exc.getMessage() +
+          " and sql state " + exc.getSQLState();
+      throw new AntibioticServiceException(message, exc);
+    } catch (Exception exc) {
+      String message = "Unexpected exception " + exc.getClass().getName() +
+          " with message " + exc.getMessage();
+      throw new AntibioticServiceException(message, exc);
+    }
+  }
+
+  private interface Supplier<T> {
+    T produce() throws Exception;
   }
 }
