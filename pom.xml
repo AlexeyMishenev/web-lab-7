@@ -5,8 +5,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ru.ifmo.wst</groupId>
-  <artifactId>web-lab-3</artifactId>
-  <version>3.0</version>
+  <artifactId>web-lab-7</artifactId>
+  <version>7.0</version>
 
   <packaging>pom</packaging>
 
