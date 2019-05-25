@@ -70,6 +70,20 @@
         <version>1.19.4</version>
       </dependency>
 
+      <!-- https://mvnrepository.com/artifact/org.apache.juddi/uddi-ws -->
+      <dependency>
+        <groupId>org.apache.juddi</groupId>
+        <artifactId>uddi-ws</artifactId>
+        <version>3.3.6</version>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.apache.juddi/juddi-client -->
+      <dependency>
+        <groupId>org.apache.juddi</groupId>
+        <artifactId>juddi-client</artifactId>
+        <version>3.3.6</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 

@@ -13,17 +13,36 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.List;
+import java.util.stream.Collectors;
+import javax.xml.ws.BindingProvider;
+import lombok.SneakyThrows;
+import org.apache.juddi.api_v3.AccessPointType;
+import org.uddi.api_v3.AccessPoint;
+import org.uddi.api_v3.BindingTemplate;
+import org.uddi.api_v3.BindingTemplates;
+import org.uddi.api_v3.BusinessDetail;
+import org.uddi.api_v3.BusinessEntity;
+import org.uddi.api_v3.BusinessService;
+import org.uddi.api_v3.Name;
+import org.uddi.api_v3.ServiceDetail;
 
 public class Client {
   private static AntibioticService service;
+  private static JUDDIClient juddiClient;
 
   public static void main(String[] args) throws IOException {
     URL url = new URL(args[0]);
     AntibioticServiceService antibioticService = new AntibioticServiceService(url);
-
     service = antibioticService.getAntibioticServicePort();
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+    String username = readNotNullString("Enter JUDDI username", reader);
+    String password = readNotNullString("Enter JUDDI user password", reader);
+
+    juddiClient = new JUDDIClient("META-INF/uddi.xml");
+    juddiClient.authenticate(username, password);
+
     int curState = 0;
 
     while (true) {
@@ -37,7 +56,8 @@ public class Client {
           System.out.println("5. Создать");
           System.out.println("6. Изменить");
           System.out.println("7. Удалить");
-          System.out.println("8. Выйти");
+          System.out.println("8. jUDDI");
+          System.out.println("9. Выйти");
           curState = readState(curState, reader);
           break;
         case 1:
@@ -104,6 +124,59 @@ public class Client {
           }
           break;
         case 8:
+          int state = 0;
+          boolean br = false;
+          while (!br) {
+            switch (state) {
+              case 0:
+                System.out.println("\nВыберите один из пунктов:");
+                System.out.println("1. Вывести все бизнесы");
+                System.out.println("2. Зарегистрировать бизнес");
+                System.out.println("3. Зарегистрировать сервис");
+                System.out.println("4. Найти и использовать сервис");
+                System.out.println("5. Выйти");
+                state = readState(curState, reader);
+                break;
+              case 1:
+                listBusinesses();
+                state = 0;
+                break;
+              case 2:
+                System.out.println("Введите имя бизнеса");
+                String bnn = readString(reader);
+                if (bnn != null) {
+                  createBusiness(bnn);
+                }
+                state = 0;
+                break;
+              case 3:
+                listBusinesses();
+                String bbk = readNotNullString("Введите ключ бизнеса", reader);
+                String ssn = readNotNullString("Введите имя сервиса", reader);
+                String ssurl = readNotNullString("Введите ссылку на wsdl", reader);
+                createService(bbk, ssn, ssurl);
+                state = 0;
+                break;
+              case 4:
+                String ffsn = readString("Введите имя сервиса для поиска", reader);
+                filterServices(ffsn);
+                String kkey = readString("Введите ключ сервиса", reader);
+                if (kkey != null) {
+                  useService(kkey);
+                }
+                br = true;
+                break;
+              case 5:
+                br = true;
+                break;
+              default:
+                state = 0;
+                break;
+            }
+          }
+          curState = 0;
+          break;
+        case 9:
           return;
         default:
           curState = 0;
@@ -214,6 +287,76 @@ public class Client {
     }
 
     System.out.println(format("Удалено {0} строк(а)", service.delete(id)));
+  }
+
+  @SneakyThrows
+  private static void useService(String serviceKey) {
+
+    ServiceDetail serviceDetail = juddiClient.getService(serviceKey.trim());
+    if (serviceDetail == null || serviceDetail.getBusinessService() == null || serviceDetail
+        .getBusinessService().isEmpty()) {
+      System.out.printf("Can not find service by key '%s'\b", serviceKey);
+      return;
+    }
+    List<BusinessService> services = serviceDetail.getBusinessService();
+    BusinessService businessService = services.get(0);
+    BindingTemplates bindingTemplates = businessService.getBindingTemplates();
+    if (bindingTemplates == null || bindingTemplates.getBindingTemplate().isEmpty()) {
+      System.out.printf("No binding template found for service '%s' '%s'\n", serviceKey,
+          businessService.getBusinessKey());
+      return;
+    }
+    for (BindingTemplate bindingTemplate : bindingTemplates.getBindingTemplate()) {
+      AccessPoint accessPoint = bindingTemplate.getAccessPoint();
+      if (accessPoint.getUseType().equals(AccessPointType.END_POINT.toString())) {
+        String value = accessPoint.getValue();
+        System.out.printf("Use endpoint '%s'\n", value);
+        changeEndpointUrl(value);
+        return;
+      }
+    }
+    System.out.printf("No endpoint found for service '%s'\n", serviceKey);
+  }
+
+  @SneakyThrows
+  private static void createService(String businessKey, String serviceName, String wsdlUrl) {
+    List<ServiceDetail> serviceDetails = juddiClient
+        .publishUrl(businessKey.trim(), serviceName.trim(), wsdlUrl.trim());
+    System.out.printf("Services published from wsdl %s\n", wsdlUrl);
+    JUDDIUtil.printServicesInfo(serviceDetails.stream()
+        .map(ServiceDetail::getBusinessService)
+        .flatMap(List::stream)
+        .collect(Collectors.toList())
+    );
+  }
+
+  @SneakyThrows
+  private static void createBusiness(String businessName) {
+    businessName = businessName.trim();
+    BusinessDetail business = juddiClient.createBusiness(businessName);
+    System.out.println("New business was created");
+    for (BusinessEntity businessEntity : business.getBusinessEntity()) {
+      System.out.printf("Key: '%s'\n", businessEntity.getBusinessKey());
+      System.out.printf("Name: '%s'\n",
+          businessEntity.getName().stream().map(Name::getValue).collect(Collectors.joining(" ")));
+    }
+  }
+
+  private static void changeEndpointUrl(String endpointUrl) {
+    ((BindingProvider) service).getRequestContext()
+        .put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, endpointUrl.trim());
+  }
+
+
+  @SneakyThrows
+  private static void filterServices(String filterArg) {
+    List<BusinessService> services = juddiClient.getServices(filterArg);
+    JUDDIUtil.printServicesInfo(services);
+  }
+
+  @SneakyThrows
+  private static void listBusinesses() {
+    JUDDIUtil.printBusinessInfo(juddiClient.getBusinessList().getBusinessInfos());
   }
 
 

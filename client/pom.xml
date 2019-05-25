@@ -50,6 +50,16 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.juddi</groupId>
+      <artifactId>uddi-ws</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.juddi</groupId>
+      <artifactId>juddi-client</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
