@@ -163,7 +163,7 @@ public class AntibioticsDAO {
     }
   }
 
-  public int delete(long id) throws SQLException {
+  public long delete(long id) throws SQLException {
     log.debug("Delete entity with id {}", id);
     try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(true);

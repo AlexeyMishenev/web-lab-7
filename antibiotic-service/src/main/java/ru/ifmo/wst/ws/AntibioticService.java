@@ -1,5 +1,7 @@
 package ru.ifmo.wst.ws;
 
+import static java.text.MessageFormat.format;
+
 import java.sql.SQLException;
 import java.util.List;
 import javax.inject.Inject;
@@ -66,11 +68,11 @@ public class AntibioticService {
   }
 
   @WebMethod
-  public int delete(@WebParam(name = "id") long id) throws AntibioticServiceException {
+  public long delete(@WebParam(name = "id") long id) throws AntibioticServiceException {
     return wrapException(() -> {
-      int deletedCount = antibioticsDAO.delete(id);
+      long deletedCount = antibioticsDAO.delete(id);
       if (deletedCount <= 0) {
-        throw new AntibioticServiceException("No records with id " + id + " found to delete");
+        throw new AntibioticServiceException(format("No records with id {0} found to delete", id));
       }
       return deletedCount;
     });
