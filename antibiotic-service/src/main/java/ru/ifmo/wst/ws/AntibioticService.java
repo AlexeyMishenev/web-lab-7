@@ -60,10 +60,10 @@ public class AntibioticService {
       @WebParam(name = "to") Integer to,
       @WebParam(name = "dosage") String dosage,
       @WebParam(name = "additional") String additional) throws AntibioticServiceException {
-    notNullArg("name", name);
-    notNullArg("from", from);
-    notNullArg("to", to);
-    notNullArg("dosage", dosage);
+    checkNotNullArg("name", name);
+    checkNotNullArg("from", from);
+    checkNotNullArg("to", to);
+    checkNotNullArg("dosage", dosage);
     return wrapException(() -> antibioticsDAO.create(name, method, to, from, dosage, additional));
   }
 
@@ -88,23 +88,22 @@ public class AntibioticService {
       @WebParam(name = "to") Integer to,
       @WebParam(name = "dosage") String dosage,
       @WebParam(name = "additional") String additional) throws AntibioticServiceException {
-    notNullArg("name", name);
-    notNullArg("from", from);
-    notNullArg("to", to);
-    notNullArg("dosage", dosage);
+    checkNotNullArg("name", name);
+    checkNotNullArg("from", from);
+    checkNotNullArg("to", to);
+    checkNotNullArg("dosage", dosage);
     return wrapException(() -> {
       long updatedCount = antibioticsDAO.update(id, name, method, from, to, dosage, additional);
       if (updatedCount <= 0) {
-        throw new AntibioticServiceException("No records with id " + id + " found to update");
+        throw new AntibioticServiceException(format("No records with id {0} found to update", id));
       }
       return updatedCount;
     });
   }
 
-  private void notNullArg(String argName, Object argValue) throws AntibioticServiceException {
+  private void checkNotNullArg(String argName, Object argValue) throws AntibioticServiceException {
     if (argValue == null) {
-      String message = argName + " must be not null";
-      throw new AntibioticServiceException(message);
+      throw new AntibioticServiceException(format("{0} must be not null", argName));
     }
   }
 
